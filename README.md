@@ -35,4 +35,4 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
 
 ## 🚀 Como executar
 
-Basta abrir o arquivo `index.html` no navegador — não precisa de servidor ou dependências externas.
+Basta abrir o link: https://lupacs22.github.io/geradorCoordenadasCSV/ 
