@@ -5,7 +5,7 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
 
 ---
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 - Aceita múltiplos formatos de coordenadas:
   - Decimal:  
@@ -25,7 +25,7 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
 
 ---
 
-## 🖼️ Exemplo de uso
+## Exemplo de uso
 
 1. Cole coordenadas no campo de texto (uma por linha):
 2. Clique em **Pré-visualizar** para validar.
@@ -33,6 +33,6 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
 
 ---
 
-## 🚀 Como executar
+## Como executar
 
 Basta abrir o link: https://lupacs22.github.io/geradorCoordenadasCSV/ 
