@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Conversor de Coordenadas → CSV (ID;LAT;LON)</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;margin:24px;line-height:1.35}
+  h1{font-size:1.25rem;margin:0 0 12px}
+  textarea{width:100%;min-height:220px;font-family:ui-monospace,Consolas,monospace}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+  button{padding:10px 14px;border:1px solid #ccc;border-radius:8px;background:#f6f6f6;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  table{border-collapse:collapse;width:100%;margin-top:12px}
+  th,td{border:1px solid #e1e1e1;padding:8px 10px;text-align:left}
+  .ok{color:#0a6a2b;font-weight:600}
+  .err{color:#b00020;font-weight:600}
+  .muted{color:#777}
+  .small{font-size:.9em}
+  .hint{font-size:.92em;color:#333}
+  .code{font-family:ui-monospace,Consolas,monospace;background:#fafafa;border:1px solid #eee;border-radius:6px;padding:6px 8px;display:inline-block}
+  #downloadWrap{margin-top:12px}
+</style>
+</head>
+<body>
+<h1>Conversor de Coordenadas → CSV (ID;LAT;LON)</h1>
+
+<p class="hint">
+Cole abaixo uma coordenada por linha. Exemplos aceitos:
+<span class="code">S 22° 26,710’, W 040° 02,303’</span>,
+<span class="code">-22.40862, -41.68232</span>,
+<span class="code">22 40 44 S, 40 36 15 W</span>,
+<span class="code">17 4.433 S, 37 52.9 W</span>,
+<span class="code">22 24 31.03 S, 41 40 59.63 W</span>,
+<span class="code">24º 41.261’ S; 42º 24.036’ W</span>.
+</p>
+
+<textarea id="inp" placeholder="Uma coordenada por linha. Linhas em branco serão ignoradas."></textarea>
+
+<div class="row">
+  <button id="btnPreview">Pré-visualizar</button>
+  <span id="status" class="muted small"></span>
+</div>
+
+<div id="out"></div>
+
+<div id="downloadWrap">
+  <button id="btnDownload" disabled>Baixar CSV</button>
+</div>
+
+<script>
+/* ========= Utilidades ========= */
+function normSpaces(s){ return s.replace(/\u00A0/g,' ').trim().replace(/\s{2,}/g,' '); }
+function normalizeSymbolsToSpaces(s){ return s.replace(/[°º'’′"″“”´]/g,' ').replace(/\u00A0/g,' '); }
+function numUS(str){ return Number(String(str).trim().replace(',', '.')); }
+function hasHemisphere(s, letters){ return new RegExp('(?:^|\\s)['+letters+'](?:\\s|$)','i').test(s); }
+
+/* ========= Encontrar separador LAT/LON ========= */
+function findLatLonSplit(raw){
+  const semi = raw.indexOf(';');
+  if (semi >= 0) return semi;
+  for (let i=0;i<raw.length;i++){
+    if (raw[i] === ','){
+      const p = i>0 ? raw[i-1] : '';
+      const n = i+1<raw.length ? raw[i+1] : '';
+      if (!(p >= '0' && p <= '9' && n >= '0' && n <= '9')) return i; // vírgula não-decimal
+    }
+  }
+  const m = raw.match(/^(.*?\S)\s{2,}(\S.*)$/);
+  if (m) return m[1].length; // dois+ espaços
+  return -1;
+}
+
+/* ========= Parse de UMA coordenada ========= */
+function toDecimalDegrees(coord, isLongitude){
+  if (!coord) return {ok:false, msg:'vazio'};
+  let s = normalizeSymbolsToSpaces(coord);
+  s = normSpaces(s);
+
+  // hemisfério (manda no sinal)
+  let hemi = '';
+  if (hasHemisphere(s,'Ss')) hemi = 'S';
+  else if (hasHemisphere(s,'Nn')) hemi = 'N';
+  if (!hemi){
+    if (hasHemisphere(s,'Ww')) hemi = 'W';
+    else if (hasHemisphere(s,'Ee')) hemi = 'E';
+  }
+  const explicitNeg = /^\s*-/.test(s);
+
+  // extrai até 3 números (graus, min, seg)
+  const nums = (s.match(/\d+(?:[.,]\d+)?/g) || []).slice(0,3).map(numUS);
+  if (nums.length===0 || nums.some(x=>Number.isNaN(x))) return {ok:false,msg:'sem números'};
+
+  let val = 0;
+  if (nums.length===1) val = nums[0];
+  else if (nums.length===2) val = nums[0] + nums[1]/60;
+  else val = nums[0] + nums[1]/60 + nums[2]/3600;
+
+  let sign = 1;
+  if (hemi){ if (hemi==='S' || hemi==='W') sign = -1; }
+  else if (explicitNeg) sign = -1;
+  val = sign * val;
+
+  if (isLongitude){ if (val < -180 || val > 180) return {ok:false,msg:'lon fora da faixa'}; }
+  else { if (val < -90 || val > 90) return {ok:false,msg:'lat fora da faixa'}; }
+
+  return {ok:true, value:val};
+}
+
+/* ========= Parse de uma linha ========= */
+function parseLine(line){
+  if (!line || !line.trim()) return {ok:false, ignore:true}; // ignora vazias
+  const raw = line.trim();
+  const pos = findLatLonSplit(raw);
+  if (pos < 0) return {ok:false, msg:'não achei separador LAT/LON'};
+  const left = raw.slice(0,pos).trim();
+  const right = raw.slice(pos+1).trim();
+
+  const lat = toDecimalDegrees(left, false);
+  if (!lat.ok) return {ok:false, msg:'LAT inválida: '+lat.msg};
+  const lon = toDecimalDegrees(right, true);
+  if (!lon.ok) return {ok:false, msg:'LON inválida: '+lon.msg};
+
+  return {ok:true, lat:lat.value, lon:lon.value};
+}
+
+/* ========= UI ========= */
+const $inp=document.getElementById('inp');
+const $btnPrev=document.getElementById('btnPreview');
+const $btnDown=document.getElementById('btnDownload');
+const $out=document.getElementById('out');
+const $status=document.getElementById('status');
+
+const DECIMALS = 6; // sempre 6 casas
+let lastResult=[];
+
+function fmt(n){ return n.toFixed(DECIMALS); }
+
+$btnPrev.addEventListener('click',()=>{
+  const lines=$inp.value.split(/\r?\n/);
+  lastResult=[];
+  let html='<table><thead><tr><th>ID</th><th>Entrada</th><th>Status</th><th>LAT</th><th>LON</th></tr></thead><tbody>';
+  let id=1, okCount=0, failCount=0;
+
+  lines.forEach((ln)=>{
+    const p=parseLine(ln);
+    if (p.ignore) return;
+    if (p.ok){
+      okCount++;
+      lastResult.push({id, lat:p.lat, lon:p.lon});
+      html+=`<tr><td>${id}</td><td>${ln.replace(/</g,'&lt;')}</td><td class="ok">OK</td><td>${fmt(p.lat)}</td><td>${fmt(p.lon)}</td></tr>`;
+      id++;
+    }else{
+      failCount++;
+      html+=`<tr><td class="muted">—</td><td>${ln.replace(/</g,'&lt;')}</td><td class="err">ERRO: ${p.msg}</td><td class="muted">—</td><td class="muted">—</td></tr>`;
+    }
+  });
+
+  html+='</tbody></table>';
+  $out.innerHTML=html;
+  $status.textContent=`Linhas válidas: ${okCount} • Linhas com erro: ${failCount}`;
+  $btnDown.disabled = lastResult.length===0;
+});
+
+$btnDown.addEventListener('click',()=>{
+  if (lastResult.length===0) return;
+  let csv='ID;LAT;LON\n';
+  for (const r of lastResult){
+    csv += `${r.id};${r.lat.toFixed(DECIMALS)};${r.lon.toFixed(DECIMALS)}\n`;
+  }
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='coordenadas.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
