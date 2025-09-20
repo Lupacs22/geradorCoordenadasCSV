@@ -158,7 +158,7 @@ $btnPrev.addEventListener('click',()=>{
 
   html+='</tbody></table>';
   $out.innerHTML=html;
-  $status.textContent=`Linhas válidas: ${okCount} • Linhas com erro: ${failCount}`;
+  //$status.textContent=`Linhas válidas: ${okCount} • Linhas com erro: ${failCount}`;
   $btnDown.disabled = lastResult.length===0;
 });
 
@@ -179,3 +179,4 @@ $btnDown.addEventListener('click',()=>{
 </script>
 </body>
 </html>
+
