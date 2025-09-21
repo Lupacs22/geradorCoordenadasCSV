@@ -18,6 +18,7 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
     `S 22° 26,710’, W 040° 02,303’`
     `24º 41.261’ S; 42º 24.036’ W`
   - Hemisfério antes ou depois (N/S/E/W).
+- Converter as coordenadas para os formatos:  DD (Graus decimais);  DMM (Graus + Minutos decimais);  DMS (Graus, Minutos e Segundos) e  UTM
 - Linhas em branco são ignoradas automaticamente.
 - IDs sempre começam em `1` e são sequenciais.
 - Exporta CSV com **separador `;`** e 6 casas decimais.
