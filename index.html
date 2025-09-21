@@ -356,7 +356,8 @@ function renderPreview(rows){
       <td><span class="coordText">${escapeHTML(r.srcLine||'')}</span></td>
       <td><span class="coordText">${escapeHTML(converted)}</span></td>
       <td>${r.ok ? `<span class="status-ok">OK</span>` : `<span class="status-err">${r.error||'erro'}</span>`}</td>
-      <td>${r.ok ? `<button class="copy-btn" data-copy="${ddCopy}">Copiar</button>` : `<button class="copy-btn" disabled>Copiar</button>`}</td>
+      <td>${r.ok ? `<button class="copy-btn" data-copy="${converted}">Copiar</button>` : `<button class="copy-btn" disabled>Copiar</button>`}</td>
+
     </tr>`;
   }
 
@@ -459,6 +460,7 @@ updateHighlight();
 </script>
 </body>
 </html>
+
 
 
 
