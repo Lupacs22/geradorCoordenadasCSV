@@ -23,9 +23,10 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
     - DMM (Graus + Minutos decimais)
     - DMS (Graus, Minutos e Segundos)
     - UTM
+- Permite copiar uma coordenada para usar em ferramenta de geolocalização.
 - Linhas em branco são ignoradas automaticamente.
 - IDs sempre começam em `1` e são sequenciais.
-- Exporta CSV com **separador `;`** e 6 casas decimais.
+- Exporta CSV com **separador `;`**.
 - Pré-visualização das coordenadas antes do download.
 
 ---
