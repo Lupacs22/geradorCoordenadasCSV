@@ -19,7 +19,8 @@
   table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff}
   th,td{border-bottom:1px solid var(--border);padding:8px 8px;text-align:left;vertical-align:top}
   .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-  .radio-group{display:flex;gap:12px;flex-wrap:wrap}
+  .radio-group{display:flex;gap:12px;flex-wrap:wrap;flex:1}
+  .center-slot{flex:1;display:flex;justify-content:center}
   .examples{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;margin-bottom:10px}
   .examples code{display:block;padding:6px 8px;background:#fff;border:1px solid var(--border);border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.25}
   .status-ok{color:var(--ok);font-weight:600}
@@ -33,7 +34,10 @@
   <h1>Conversor de Coordenadas → CSV</h1>
 
   <div class="card">
-    <p>Insira <b>uma coordenada por linha</b> (LAT/LON em qualquer formato aceito). Linhas vazias são ignoradas.</p>
+    <p>
+      Insira <b>uma coordenada por linha</b> (LAT/LON em qualquer formato aceito). Linhas vazias são ignoradas.
+      <br>Seguem alguns exemplos abaixo:
+    </p>
 
     <!-- 12 exemplos (4x3) com fonte reduzida -->
     <div class="examples">
@@ -46,23 +50,24 @@
       <code>N 47.6205, W 122.3493</code>
       <code>47° 37' 14.0" N, 122° 20' 57.7" W</code>
       <code>47 37 N, 122 20 W</code>
-      <code>47.6205 N  122.3493 W</code>
+      <code>47.6205 N 122.3493 W</code>
       <code>S 12° 30.500′, W 038° 45.250′</code>
-      <code>12°30′45″S  038°45′15″W</code>
+      <code>12°30′45″S 038°45′15″W</code>
     </div>
 
     <textarea id="txt" placeholder="Cole aqui suas coordenadas…"></textarea>
 
-    <div class="controls" style="margin-top:12px">
-      <div class="radio-group" id="fmtGroup" title="Formato do CSV">
-        <label><input type="radio" name="fmt" value="DD" checked> DD (Graus decimais)</label>
-        <label><input type="radio" name="fmt" value="DMM"> DMM (Graus + Minutos decimais)</label>
-        <label><input type="radio" name="fmt" value="DMS"> DMS (Graus, Minutos e Segundos)</label>
-        <label><input type="radio" name="fmt" value="UTM"> UTM</label>
-      </div>
-      <button id="btnConvert">Converter</button>
-      <span id="status" class="muted"></span>
-    </div>
+    <div class="controls" style="margin-top:12px; justify-content:space-between">
+  <div class="radio-group" id="fmtGroup" title="Formato do CSV" style="flex:1; display:flex; gap:18px; align-items:center">
+    <label><input type="radio" name="fmt" value="DD" checked> DD (Graus decimais)</label>
+    <label><input type="radio" name="fmt" value="DMM"> DMM (Graus + Minutos decimais)</label>
+    <label><input type="radio" name="fmt" value="DMS"> DMS (Graus, Minutos e Segundos)</label>
+    <label><input type="radio" name="fmt" value="UTM"> UTM</label>
+  </div>
+  <button id="btnConvert" style="margin-left:40px">Converter</button>
+  <span id="status" class="muted"></span>
+</div>
+
   </div>
 
   <div class="card">
@@ -164,30 +169,29 @@ function ddStrings(lat, lon, useComma=false){
 }
 function hemLetter(v, lat=true){ return lat ? (v<0?'S':'N') : (v<0?'W':'E'); }
 
-/* DMM com cardinal depois (sufixo) e padding 2/3 dígitos p/ graus (lat=2, lon=3) */
+/* DMM com cardinal como sufixo e SEM zero à esquerda em graus */
 function dmmStrings(lat, lon){
   function one(v, latAxis){
     const hem=hemLetter(v,latAxis), av=Math.abs(v);
-    const d=Math.floor(av);
+    const d=Math.floor(av);                       // sem padStart -> sem zero à esquerda
     const m=(av-d)*60;
     const mStr=(Math.round(m*1000)/1000).toFixed(3).replace('.',',');
-    const dPad = latAxis ? String(d).padStart(2,'0') : String(d).padStart(3,'0');
-    return `${dPad}° ${mStr}′ ${hem}`;
+    return `${d}° ${mStr}′ ${hem}`;
   }
   return [one(lat,true), one(lon,false)];
 }
 
+/* DMS com cardinal sufixo e SEM zero à esquerda em graus (min segue com 2 dígitos para legibilidade) */
 function dmsStrings(lat, lon){
   function one(v, latAxis){
     const hem=hemLetter(v,latAxis), av=Math.abs(v);
-    const d=Math.floor(av);
+    const d=Math.floor(av);                       // sem zero à esquerda
     const mFloat=(av-d)*60;
     const m=Math.floor(mFloat);
     const s=(mFloat-m)*60;
     const sStr=(Math.round(s*100)/100).toFixed(2).replace('.',',');
-    const dPad = latAxis ? String(d).padStart(2,'0') : String(d).padStart(3,'0');
-    const mPad = String(m).padStart(2,'0');
-    return `${dPad}° ${mPad}′ ${sStr}″ ${hem}`;
+    const mPad = String(m).padStart(2,'0');       // minutos com 2 dígitos mantém leitura
+    return `${d}° ${mPad}′ ${sStr}″ ${hem}`;
   }
   return [one(lat,true), one(lon,false)];
 }
@@ -257,13 +261,13 @@ function renderPreview(rows){
         const u=latLonToUTM(r.lat,r.lon);
         coordText = `${u.zone}${u.letter} ${u.easting} ${u.northing}`;
       }else if(fmt==='DMM'){
-        const [a,b]=dmmStrings(r.lat,r.lon);              // sufixo N/S/E/W
+        const [a,b]=dmmStrings(r.lat,r.lon);          // sem zero à esquerda no grau
         coordText = `${a} , ${b}`;
       }else if(fmt==='DMS'){
-        const [a,b]=dmsStrings(r.lat,r.lon);
+        const [a,b]=dmsStrings(r.lat,r.lon);          // sem zero à esquerda no grau
         coordText = `${a} , ${b}`;
       }else{
-        const [sLat, sLon]=ddStrings(r.lat,r.lon,true);   // vírgula no preview
+        const [sLat, sLon]=ddStrings(r.lat,r.lon,true);
         coordText = `${sLat} , ${sLon}`;
       }
     }else{
@@ -322,13 +326,13 @@ function buildCSV(rows, fmt){
   }else if(fmt==='DMM'){
     csv += 'ID;LAT;LON\n';
     for(const r of valids){
-      const [a,b]=dmmStrings(r.lat,r.lon); // já com sufixo
+      const [a,b]=dmmStrings(r.lat,r.lon); // sem zero à esquerda
       csv += `${r.id};${a};${b}\n`;
     }
   }else{
     csv += 'ID;LAT;LON\n';
     for(const r of valids){
-      const [a,b]=dmsStrings(r.lat,r.lon);
+      const [a,b]=dmsStrings(r.lat,r.lon); // sem zero à esquerda
       csv += `${r.id};${a};${b}\n`;
     }
   }
@@ -353,7 +357,7 @@ $btnConvert.onclick = () => {
   }
   lastRows = out;
   renderPreview(out);
-  // não alterar $status (sem "Pronto")
+  // sem "Pronto"
 };
 
 $fmtGroup.addEventListener('change', ()=>{
