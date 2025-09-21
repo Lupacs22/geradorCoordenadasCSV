@@ -29,7 +29,7 @@ Este projeto é uma aplicação **HTML + JavaScript** que converte diferentes fo
 
 1. Cole coordenadas no campo de texto (uma por linha):
 2. Clique em **Pré-visualizar** para validar.
-3. Clique em **Baixar CSV** para salvar um arquivo `coordenadas.csv` no formato:
+3. Clique em **Baixar CSV** para salvar um arquivo `coordenadas.csv` no formato CSV.
 
 ---
 
