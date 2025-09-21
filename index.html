@@ -1,183 +1,377 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Conversor de Coordenadas → CSV (ID;LAT;LON)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conversor de Coordenadas → CSV (ID + ; + DD/DMM/DMS/UTM)</title>
 <style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;margin:24px;line-height:1.35}
-  h1{font-size:1.25rem;margin:0 0 12px}
-  textarea{width:100%;min-height:220px;font-family:ui-monospace,Consolas,monospace}
-  .row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
-  button{padding:10px 14px;border:1px solid #ccc;border-radius:8px;background:#f6f6f6;cursor:pointer}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  table{border-collapse:collapse;width:100%;margin-top:12px}
-  th,td{border:1px solid #e1e1e1;padding:8px 10px;text-align:left}
-  .ok{color:#0a6a2b;font-weight:600}
-  .err{color:#b00020;font-weight:600}
-  .muted{color:#777}
-  .small{font-size:.9em}
-  .hint{font-size:.92em;color:#333}
-  .code{font-family:ui-monospace,Consolas,monospace;background:#fafafa;border:1px solid #eee;border-radius:6px;padding:6px 8px;display:inline-block}
-  #downloadWrap{margin-top:12px}
+  :root { --bg:#ffffff; --card:#f6f7f8; --muted:#516072; --text:#0b0d10; --ok:#2e7d32; --err:#c62828; --border:#dde2e7; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .wrap{max-width:1000px;margin:24px auto;padding:0 16px}
+  h1{font-size:20px;margin:0 0 12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:12px 0}
+  textarea,input{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;width:100%}
+  textarea{min-height:160px;font-family:ui-monospace,Consolas,monospace}
+  button{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);cursor:pointer}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff}
+  th,td{border-bottom:1px solid var(--border);padding:8px 8px;text-align:left;vertical-align:top}
+  .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .radio-group{display:flex;gap:12px;flex-wrap:wrap}
+  .examples{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;margin-bottom:10px}
+  .examples code{display:block;padding:6px 8px;background:#fff;border:1px solid var(--border);border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.25}
+  .status-ok{color:var(--ok);font-weight:600}
+  .status-err{color:var(--err);font-weight:600}
+  .coordText{display:inline-block}
+  .copy-btn{padding:6px 10px;border-radius:8px;white-space:nowrap}
 </style>
 </head>
 <body>
-<h1>Conversor de Coordenadas → CSV (ID;LAT;LON)</h1>
+<div class="wrap">
+  <h1>Conversor de Coordenadas → CSV</h1>
 
-<p class="hint">
-Cole abaixo uma coordenada por linha. Exemplos aceitos:
-<span class="code">S 22° 26,710’, W 040° 02,303’</span>,
-<span class="code">-22.40862; -41.68232</span>,
-<span class="code">22 40 44 S, 40 36 15 W</span>,
-<span class="code">17 4.433 S, 37 52.9 W</span>,
-<span class="code">22 24 31.03 S, 41 40 59.63 W</span>,
-<span class="code">24º 41.261’ S; 42º 24.036’ W</span>.
-</p>
+  <div class="card">
+    <p>Insira <b>uma coordenada por linha</b> (LAT/LON em qualquer formato aceito). Linhas vazias são ignoradas.</p>
 
-<textarea id="inp" placeholder="Uma coordenada por linha. Linhas em branco serão ignoradas."></textarea>
+    <!-- 12 exemplos (4x3) com fonte reduzida -->
+    <div class="examples">
+      <code>S 22° 26,710’, W 040° 02,303’</code>
+      <code>-22.40862, -41.68232</code>
+      <code>22 40 44 S, 40 36 15 W</code>
+      <code>17 4.433 S, 37 52.9 W</code>
+      <code>22 24 31.03 S, 41 40 59.63 W</code>
+      <code>24º 41.261’ S; 42º 24.036’ W</code>
+      <code>N 47.6205, W 122.3493</code>
+      <code>47° 37' 14.0" N, 122° 20' 57.7" W</code>
+      <code>47 37 N, 122 20 W</code>
+      <code>47.6205 N  122.3493 W</code>
+      <code>S 12° 30.500′, W 038° 45.250′</code>
+      <code>12°30′45″S  038°45′15″W</code>
+    </div>
 
-<div class="row">
-  <button id="btnPreview">Pré-visualizar</button>
-  <span id="status" class="muted small"></span>
-</div>
+    <textarea id="txt" placeholder="Cole aqui suas coordenadas…"></textarea>
 
-<div id="out"></div>
+    <div class="controls" style="margin-top:12px">
+      <div class="radio-group" id="fmtGroup" title="Formato do CSV">
+        <label><input type="radio" name="fmt" value="DD" checked> DD (Graus decimais)</label>
+        <label><input type="radio" name="fmt" value="DMM"> DMM (Graus + Minutos decimais)</label>
+        <label><input type="radio" name="fmt" value="DMS"> DMS (Graus, Minutos e Segundos)</label>
+        <label><input type="radio" name="fmt" value="UTM"> UTM</label>
+      </div>
+      <button id="btnConvert">Converter</button>
+      <span id="status" class="muted"></span>
+    </div>
+  </div>
 
-<div id="downloadWrap">
-  <button id="btnDownload" disabled>Baixar CSV</button>
+  <div class="card">
+    <div id="previewWrap"></div>
+    <div style="margin-top:12px">
+      <button id="btnDown" disabled>Baixar CSV</button>
+    </div>
+  </div>
 </div>
 
 <script>
-/* ========= Utilidades ========= */
-function normSpaces(s){ return s.replace(/\u00A0/g,' ').trim().replace(/\s{2,}/g,' '); }
-function normalizeSymbolsToSpaces(s){ return s.replace(/[°º'’′"″“”´]/g,' ').replace(/\u00A0/g,' '); }
-function numUS(str){ return Number(String(str).trim().replace(',', '.')); }
-function hasHemisphere(s, letters){ return new RegExp('(?:^|\\s)['+letters+'](?:\\s|$)','i').test(s); }
+/* ========= RegEx + Parsing ========= */
+const COORD_RE = new RegExp(
+  [
+    '(?:\\b(?<preHem>[NnSsEeWw])\\s*)?',
+    '(?<deg>[-+]?\\d{1,3}(?:[.,]\\d+)?)',
+    '(?:\\s*(?:[°ºo])?\\s*',
+      '(?<min>\\d{1,2}(?:[.,]\\d+)?)?',
+      '(?:\\s*[' + String.fromCharCode(39) + '’′]\\s*',
+        '(?<sec>\\d{1,2}(?:[.,]\\d+)?)',
+        '(?:\\s*["”″])?',
+      ')?',
+    ')?',
+    '\\s*(?<sufHem>[NnSsEeWw])?'
+  ].join(''),
+  'g'
+);
 
-/* ========= Encontrar separador LAT/LON ========= */
-function findLatLonSplit(raw){
-  const semi = raw.indexOf(';');
-  if (semi >= 0) return semi;
-  for (let i=0;i<raw.length;i++){
-    if (raw[i] === ','){
-      const p = i>0 ? raw[i-1] : '';
-      const n = i+1<raw.length ? raw[i+1] : '';
-      if (!(p >= '0' && p <= '9' && n >= '0' && n <= '9')) return i; // vírgula não-decimal
-    }
+function sanitizeLine(line){
+  return line.replace(/[^\dNSEWnsew.,;:\-+°ºo'’′"”″\s]/g, ' ').trim();
+}
+function num(str){ return str ? parseFloat(str.replace(',', '.')) : NaN; }
+
+/* ---------- Helpers de erro ---------- */
+const ERRORS = {
+  UNRECOG: 'não reconhecido',
+  INCOMPLETE: 'par incompleto',
+  RANGE: 'fora do intervalo',
+  NAN: 'número inválido'
+};
+
+function dmsToDecimal(m){
+  let d = num(m.groups.deg);
+  const hasMin = m.groups.min !== undefined && m.groups.min !== '';
+  const hasSec = m.groups.sec !== undefined && m.groups.sec !== '';
+  let minutes = hasMin ? num(m.groups.min) : 0;
+  let seconds = hasSec ? num(m.groups.sec) : 0;
+  if(hasMin || hasSec){
+    d = Math.sign(d) * Math.abs(parseInt(Math.trunc(d), 10));
   }
-  const m = raw.match(/^(.*?\S)\s{2,}(\S.*)$/);
-  if (m) return m[1].length; // dois+ espaços
-  return -1;
+  let dec = Math.abs(d) + (minutes/60) + (seconds/3600);
+  dec = (d < 0) ? -dec : dec;
+  const hem = (m.groups.preHem || m.groups.sufHem || '').toUpperCase();
+  if(hem==='S' || hem==='W') dec = -Math.abs(dec);
+  return dec;
 }
 
-/* ========= Parse de UMA coordenada ========= */
-function toDecimalDegrees(coord, isLongitude){
-  if (!coord) return {ok:false, msg:'vazio'};
-  let s = normalizeSymbolsToSpaces(coord);
-  s = normSpaces(s);
+/* devolve {ok:true, lat, lon} ou {ok:false, error:<msg>} */
+function parseLineDetailed(line){
+  const raw = sanitizeLine(line);
+  if(!raw) return { ok:false, error: ERRORS.UNRECOG };
 
-  // hemisfério (manda no sinal)
-  let hemi = '';
-  if (hasHemisphere(s,'Ss')) hemi = 'S';
-  else if (hasHemisphere(s,'Nn')) hemi = 'N';
-  if (!hemi){
-    if (hasHemisphere(s,'Ww')) hemi = 'W';
-    else if (hasHemisphere(s,'Ee')) hemi = 'E';
+  const matches = [...raw.matchAll(COORD_RE)];
+  if(matches.length === 0) return { ok:false, error: ERRORS.UNRECOG };
+
+  const coords = [];
+  for(const m of matches){
+    const hasSomeSignal =
+      (m.groups.preHem || m.groups.sufHem) ||
+      /[°ºo'’′"”″]/.test(m[0]) ||
+      /[-+]/.test(m.groups.deg) ||
+      /\d+[,\.]\d+/.test(m.groups.deg);
+    if(!hasSomeSignal) continue;
+    const dec = dmsToDecimal(m);
+    if (!Number.isFinite(dec)) return { ok:false, error: ERRORS.NAN };
+    coords.push(dec);
+    if (coords.length === 2) break;
   }
-  const explicitNeg = /^\s*-/.test(s);
 
-  // extrai até 3 números (graus, min, seg)
-  const nums = (s.match(/\d+(?:[.,]\d+)?/g) || []).slice(0,3).map(numUS);
-  if (nums.length===0 || nums.some(x=>Number.isNaN(x))) return {ok:false,msg:'sem números'};
+  if(coords.length < 2) return { ok:false, error: ERRORS.INCOMPLETE };
 
-  let val = 0;
-  if (nums.length===1) val = nums[0];
-  else if (nums.length===2) val = nums[0] + nums[1]/60;
-  else val = nums[0] + nums[1]/60 + nums[2]/3600;
+  let [a,b] = coords;
+  const inLat = Math.abs(a) <= 90, inLon = Math.abs(b) <= 180;
+  const inLat2 = Math.abs(b) <= 90, inLon2 = Math.abs(a) <= 180;
+  if(!(inLat && inLon) && (inLat2 && inLon2)) [a,b] = [b,a];
 
-  let sign = 1;
-  if (hemi){ if (hemi==='S' || hemi==='W') sign = -1; }
-  else if (explicitNeg) sign = -1;
-  val = sign * val;
+  if(!Number.isFinite(a) || !Number.isFinite(b)) return { ok:false, error: ERRORS.NAN };
+  if(Math.abs(a) > 90 || Math.abs(b) > 180) return { ok:false, error: ERRORS.RANGE };
 
-  if (isLongitude){ if (val < -180 || val > 180) return {ok:false,msg:'lon fora da faixa'}; }
-  else { if (val < -90 || val > 90) return {ok:false,msg:'lat fora da faixa'}; }
-
-  return {ok:true, value:val};
+  return { ok:true, lat:a, lon:b };
 }
 
-/* ========= Parse de uma linha ========= */
-function parseLine(line){
-  if (!line || !line.trim()) return {ok:false, ignore:true}; // ignora vazias
-  const raw = line.trim();
-  const pos = findLatLonSplit(raw);
-  if (pos < 0) return {ok:false, msg:'não achei separador LAT/LON'};
-  const left = raw.slice(0,pos).trim();
-  const right = raw.slice(pos+1).trim();
+/* ========= Formatação ========= */
+function toFixed6(x){ return (Math.round(x*1e6)/1e6).toFixed(6); }
+function ddStrings(lat, lon, useComma=false){
+  const sLat = (useComma ? toFixed6(lat).replace('.', ',') : toFixed6(lat));
+  const sLon = (useComma ? toFixed6(lon).replace('.', ',') : toFixed6(lon));
+  return [sLat, sLon];
+}
+function hemLetter(v, lat=true){ return lat ? (v<0?'S':'N') : (v<0?'W':'E'); }
 
-  const lat = toDecimalDegrees(left, false);
-  if (!lat.ok) return {ok:false, msg:'LAT inválida: '+lat.msg};
-  const lon = toDecimalDegrees(right, true);
-  if (!lon.ok) return {ok:false, msg:'LON inválida: '+lon.msg};
+/* DMM com cardinal depois (sufixo) e padding 2/3 dígitos p/ graus (lat=2, lon=3) */
+function dmmStrings(lat, lon){
+  function one(v, latAxis){
+    const hem=hemLetter(v,latAxis), av=Math.abs(v);
+    const d=Math.floor(av);
+    const m=(av-d)*60;
+    const mStr=(Math.round(m*1000)/1000).toFixed(3).replace('.',',');
+    const dPad = latAxis ? String(d).padStart(2,'0') : String(d).padStart(3,'0');
+    return `${dPad}° ${mStr}′ ${hem}`;
+  }
+  return [one(lat,true), one(lon,false)];
+}
 
-  return {ok:true, lat:lat.value, lon:lon.value};
+function dmsStrings(lat, lon){
+  function one(v, latAxis){
+    const hem=hemLetter(v,latAxis), av=Math.abs(v);
+    const d=Math.floor(av);
+    const mFloat=(av-d)*60;
+    const m=Math.floor(mFloat);
+    const s=(mFloat-m)*60;
+    const sStr=(Math.round(s*100)/100).toFixed(2).replace('.',',');
+    const dPad = latAxis ? String(d).padStart(2,'0') : String(d).padStart(3,'0');
+    const mPad = String(m).padStart(2,'0');
+    return `${dPad}° ${mPad}′ ${sStr}″ ${hem}`;
+  }
+  return [one(lat,true), one(lon,false)];
+}
+
+/* ========= UTM (WGS84) ========= */
+function latLonToUTM(lat, lon){
+  const a=6378137.0, f=1/298.257223563, k0=0.9996;
+  const e2=f*(2-f), ep2=e2/(1-e2);
+  const rad=Math.PI/180;
+  const φ=lat*rad;
+  let λ=lon*rad;
+  let zone = Math.floor((lon + 180)/6) + 1;
+  const λ0 = ((zone-1)*6 - 180 + 3) * rad;
+  const N = a / Math.sqrt(1 - e2*Math.sin(φ)**2);
+  const T = Math.tan(φ)**2;
+  const C = ep2 * Math.cos(φ)**2;
+  const A = Math.cos(φ)*(λ-λ0);
+  const e4 = e2*e2, e6=e4*e2;
+  const M = a*((1 - e2/4 - 3*e4/64 - 5*e6/256)*φ
+        - (3*e2/8 + 3*e4/32 + 45*e6/1024)*Math.sin(2*φ)
+        + (15*e4/256 + 45*e6/1024)*Math.sin(4*φ)
+        - (35*e6/3072)*Math.sin(6*φ));
+  const x = k0*N*(A + (1-T+C)*A**3/6 + (5 - 18*T + T**2 + 72*C - 58*ep2)*A**5/120) + 500000.0;
+  let y = k0*(M + N*Math.tan(φ)*(A**2/2 + (5 - T + 9*C + 4*C**2)*A**4/24 + (61 - 58*T + T**2 + 600*C - 330*ep2)*A**6/720));
+  if (lat < 0) y += 10000000.0;
+  function zoneLetterFromLat(lat){
+    if(lat>=84) return 'X'; if(lat< -80) return 'C';
+    const letters='CDEFGHJKLMNPQRSTUVWX'; const idx=Math.floor((lat+80)/8);
+    return letters[Math.max(0, Math.min(letters.length-1, idx))];
+  }
+  const letter = zoneLetterFromLat(lat);
+  return { zone, letter, easting: Math.round(x), northing: Math.round(y) };
 }
 
 /* ========= UI ========= */
-const $inp=document.getElementById('inp');
-const $btnPrev=document.getElementById('btnPreview');
-const $btnDown=document.getElementById('btnDownload');
-const $out=document.getElementById('out');
-const $status=document.getElementById('status');
+const $txt = document.getElementById('txt');
+const $status = document.getElementById('status');
+const $previewWrap = document.getElementById('previewWrap');
+const $btnConvert = document.getElementById('btnConvert');
+const $btnDown = document.getElementById('btnDown');
+const $fmtGroup = document.getElementById('fmtGroup');
 
-const DECIMALS = 6; // sempre 6 casas
-let lastResult=[];
+let lastRows = []; // {id,lat,lon, ok:boolean, msg?:string, srcLine?:string}
+let lastFmt = 'DD';
 
-function fmt(n){ return n.toFixed(DECIMALS); }
+function getSelectedFmt(){
+  const r=[...$fmtGroup.querySelectorAll('input[name="fmt"]')].find(x=>x.checked);
+  return r ? r.value : 'DD';
+}
 
-$btnPrev.addEventListener('click',()=>{
-  const lines=$inp.value.split(/\r?\n/);
-  lastResult=[];
-  let html='<table><thead><tr><th>ID</th><th>Entrada</th><th>Status</th><th>LAT</th><th>LON</th></tr></thead><tbody>';
-  let id=1, okCount=0, failCount=0;
+function renderPreview(rows){
+  const fmt = getSelectedFmt();
+  lastFmt = fmt;
 
-  lines.forEach((ln)=>{
-    const p=parseLine(ln);
-    if (p.ignore) return;
-    if (p.ok){
-      okCount++;
-      lastResult.push({id, lat:p.lat, lon:p.lon});
-      html+=`<tr><td>${id}</td><td>${ln.replace(/</g,'&lt;')}</td><td class="ok">OK</td><td>${fmt(p.lat)}</td><td>${fmt(p.lon)}</td></tr>`;
-      id++;
+  if(rows.length===0){
+    $previewWrap.innerHTML = '<p class="muted">Nenhuma linha para pré-visualizar.</p>';
+    $btnDown.disabled = true;
+    return;
+  }
+
+  let html = '<table><thead><tr><th>ID</th><th>Coordenadas</th><th>Status</th><th>Copiar</th></tr></thead><tbody>';
+
+  for(const r of rows){
+    let coordText = '';
+    if(r.ok){
+      if(fmt==='UTM'){
+        const u=latLonToUTM(r.lat,r.lon);
+        coordText = `${u.zone}${u.letter} ${u.easting} ${u.northing}`;
+      }else if(fmt==='DMM'){
+        const [a,b]=dmmStrings(r.lat,r.lon);              // sufixo N/S/E/W
+        coordText = `${a} , ${b}`;
+      }else if(fmt==='DMS'){
+        const [a,b]=dmsStrings(r.lat,r.lon);
+        coordText = `${a} , ${b}`;
+      }else{
+        const [sLat, sLon]=ddStrings(r.lat,r.lon,true);   // vírgula no preview
+        coordText = `${sLat} , ${sLon}`;
+      }
     }else{
-      failCount++;
-      html+=`<tr><td class="muted">—</td><td>${ln.replace(/</g,'&lt;')}</td><td class="err">ERRO: ${p.msg}</td><td class="muted">—</td><td class="muted">—</td></tr>`;
+      coordText = r.srcLine || '';
     }
+
+    const ddCopy = r.ok ? ddStrings(r.lat,r.lon,false).join(', ') : '';
+
+    html += `<tr>
+      <td>${r.id}</td>
+      <td><span class="coordText">${coordText}</span></td>
+      <td>${r.ok ? `<span class="status-ok">OK</span>` : `<span class="status-err">${r.msg||'erro'}</span>`}</td>
+      <td>${r.ok ? `<button class="copy-btn" data-copy="${ddCopy}">Copiar</button>` : `<button class="copy-btn" disabled>Copiar</button>`}</td>
+    </tr>`;
+  }
+
+  html += '</tbody></table>';
+  $previewWrap.innerHTML = html;
+
+  // ações dos botões Copiar
+  $previewWrap.querySelectorAll('.copy-btn:not([disabled])').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const txt = btn.getAttribute('data-copy');
+      try{
+        await navigator.clipboard.writeText(txt);
+        btn.textContent = 'Copiado!';
+        setTimeout(()=> btn.textContent='Copiar', 1200);
+      }catch{
+        const ta=document.createElement('textarea');
+        ta.value=txt; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+        btn.textContent = 'Copiado!';
+        setTimeout(()=> btn.textContent='Copiar', 1200);
+      }
+    });
   });
 
-  html+='</tbody></table>';
-  $out.innerHTML=html;
-  //$status.textContent=`Linhas válidas: ${okCount} • Linhas com erro: ${failCount}`;
-  $btnDown.disabled = lastResult.length===0;
+  $btnDown.disabled = false;
+}
+
+function buildCSV(rows, fmt){
+  const valids = rows.filter(r=>r.ok);
+  let csv = '';
+  if(fmt==='UTM'){
+    csv += 'ID;UTM_ZONE;EASTING;NORTHING\n';
+    for(const r of valids){
+      const u=latLonToUTM(r.lat,r.lon);
+      csv += `${r.id};${u.zone}${u.letter};${u.easting};${u.northing}\n`;
+    }
+  }else if(fmt==='DD'){
+    csv += 'ID;LAT;LON\n';
+    for(const r of valids){
+      const [sLat,sLon]=ddStrings(r.lat,r.lon,true);
+      csv += `${r.id};${sLat};${sLon}\n`;
+    }
+  }else if(fmt==='DMM'){
+    csv += 'ID;LAT;LON\n';
+    for(const r of valids){
+      const [a,b]=dmmStrings(r.lat,r.lon); // já com sufixo
+      csv += `${r.id};${a};${b}\n`;
+    }
+  }else{
+    csv += 'ID;LAT;LON\n';
+    for(const r of valids){
+      const [a,b]=dmsStrings(r.lat,r.lon);
+      csv += `${r.id};${a};${b}\n`;
+    }
+  }
+  return csv;
+}
+
+/* ========= Ações ========= */
+$btnConvert.onclick = () => {
+  const lines = $txt.value.split(/\r?\n/);
+  const out = [];
+  let id = 1;
+  for (let i=0;i<lines.length;i++){
+    const s = lines[i].trim();
+    if(!s) continue; // ignora vazias
+    const parsed = parseLineDetailed(s);
+    if(parsed.ok){
+      out.push({id, lat:parsed.lat, lon:parsed.lon, ok:true, srcLine:s});
+    }else{
+      out.push({id, ok:false, msg:parsed.error, srcLine:s});
+    }
+    id++;
+  }
+  lastRows = out;
+  renderPreview(out);
+  // não alterar $status (sem "Pronto")
+};
+
+$fmtGroup.addEventListener('change', ()=>{
+  if(lastRows.length>0) renderPreview(lastRows);
 });
 
-$btnDown.addEventListener('click',()=>{
-  if (lastResult.length===0) return;
-  let csv='ID;LAT;LON\n';
-  for (const r of lastResult){
-    csv += `${r.id};${r.lat.toFixed(DECIMALS)};${r.lon.toFixed(DECIMALS)}\n`;
-  }
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='coordenadas.csv';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
+$btnDown.onclick = () => {
+  if(lastRows.length===0) return;
+  const fmt = getSelectedFmt();
+  const csv = buildCSV(lastRows, fmt);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'coordenadas.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+};
 </script>
 </body>
 </html>
-
-
