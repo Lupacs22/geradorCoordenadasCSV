@@ -15,7 +15,7 @@
   button:disabled{opacity:.55;cursor:not-allowed}
   .muted{color:var(--muted)}
 
-  /* Exemplos + textarea com mesma largura dentro da card */
+  /* Exemplos + textarea na mesma largura */
   .io-block{width:100%}
 
   /* Textarea + overlay de validação */
@@ -38,8 +38,16 @@
   .controls{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .radio-group{flex:1;display:flex;gap:18px;align-items:center;white-space:nowrap}
 
-  /* Exemplos */
-  .examples { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; font-size:12px; }
+  /* Exemplos (texto simples, mono, menor) */
+  .examples{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+    margin:10px 0;
+    font-family:ui-monospace,Consolas,monospace;
+    font-size:12px;
+  }
+  .examples div{white-space:nowrap}
 
   /* Tabela preview */
   table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff;overflow:hidden;border-radius:10px;border:1px solid var(--border)}
@@ -66,21 +74,21 @@
     </p>
 
     <div class="io-block">
-      <!-- EXEMPLOS -->
-     <div class="examples">
-    	<div>22° 26,710’ S, 040° 02,303’ W</div>
-    	<div>S 22° 26,710’, W 040° 02,303’</div>
-    	<div>-22.40862, -41.68232</div>
-    	<div>22 40 44 S, 40 36 15 W</div>
-    	<div>17 4.433 S, 37 52.9 W</div>
-    	<div>22 24 31.03 S, 41 40 59.63 W</div>
-    	<div>24º 41.261’ S, 42º 24.036’ W</div>
-    	<div>24°54'22.3"S 38°15'35.9"W</div>
-    	<div>40.446° N 79.982° W</div>
-    	<div>48°51′12″N 2°20′55″E</div>
-    	<div>41 24.2028, 2 10.4418</div>
-    	<div>33°51′31″S 151°12′51″E</div>
-     </div>
+      <!-- EXEMPLOS (texto simples, sem caixa) -->
+      <div class="examples">
+        <div>S 22° 26,710’, W 040° 02,303’</div>
+        <div>-22.40862, -41.68232</div>
+        <div>22 40 44 S, 40 36 15 W</div>
+        <div>17 4.433 S, 37 52.9 W</div>
+        <div>22 24 31.03 S, 41 40 59.63 W</div>
+        <div>24º 41.261’ S; 42º 24.036’ W</div>
+        <div>N 47.6205, W 122.3493</div>
+        <div>24°54'22.3"S 38°15'35.9"W</div>
+        <div>47 37 N, 122 20 W</div>
+        <div>47.6205 N  122.3493 W</div>
+        <div>S 12° 30.500′, W 038° 45.250′</div>
+        <div>12°30′45″S  038°45′15″W</div>
+      </div>
 
       <!-- TEXTAREA + highlight -->
       <div class="ta-wrap">
@@ -115,8 +123,8 @@ const COORD_RE = new RegExp(
     '(?:\\b(?<preHem>[NnSsEeWw])\\s*)?',       // hemisfério antes (opcional)
     '(?<deg>[-+]?\\d{1,3}(?:[.,]\\d+)?)',      // graus (int/decimal)
     '(?:\\s*(?:[°ºo]))?',                      // símbolo de grau opcional
-    '(?:\\s*(?<min>\\d{1,2}(?:[.,]\\d+)?)\\s*(?:[\'’′])?)?', // minutos (opcional) com ou sem símbolo
-    '(?:\\s*(?<sec>\\d{1,2}(?:[.,]\\d+)?)\\s*(?:["”″])?)?',  // segundos (opcional) com ou sem símbolo
+    '(?:\\s*(?<min>\\d{1,2}(?:[.,]\\d+)?)\\s*(?:[\'’′])?)?', // minutos (opcional) com/sem símbolo
+    '(?:\\s*(?<sec>\\d{1,2}(?:[.,]\\d+)?)\\s*(?:["”″])?)?',  // segundos (opcional) com/sem símbolo
     '\\s*(?<sufHem>[NnSsEeWw])?'               // hemisfério depois (opcional)
   ].join(''),
   'g'
@@ -308,9 +316,15 @@ function renderPreview(rows){
   $previewWrap.innerHTML=html;
 
   $previewWrap.querySelectorAll('.copy-btn[data-copy]').forEach(btn=>{
-    btn.onclick=async()=>{const txt=btn.dataset.copy;try{await navigator.clipboard.writeText(txt);}catch(e){
-      const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-    } btn.textContent='Copiado!'; setTimeout(()=>btn.textContent='Copiar',1200);};
+    btn.onclick=async()=>{
+      const txt=btn.dataset.copy;
+      try{ await navigator.clipboard.writeText(txt); }
+      catch(e){
+        const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy'); ta.remove();
+      }
+      btn.textContent='Copiado!'; setTimeout(()=>btn.textContent='Copiar',1200);
+    };
   });
 }
 
@@ -344,7 +358,7 @@ function convertNow(){
   }
   lastRows=out; renderPreview(out); updateHighlight();
 }
-$btnConvert.onclick=convertNow;
+document.getElementById('btnConvert').onclick=convertNow;
 $fmtGroup.onchange=()=>{ if(lastRows.length>0) renderPreview(lastRows); };
 
 /* download */
