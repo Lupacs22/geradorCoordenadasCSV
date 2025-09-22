@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<link rel="icon" type="image/png" href="favicon.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Conversor de Coordenadas e gerador de arquivo CSV</title>
@@ -16,59 +15,39 @@
   button:disabled{opacity:.55;cursor:not-allowed}
   .muted{color:var(--muted)}
 
-  /* Área de exemplos + textarea compartilham a mesma largura da card */
-  .io-block{ /* container para garantir mesma largura/offset */
-    width:100%;
-  }
+  /* Exemplos + textarea com mesma largura dentro da card */
+  .io-block{width:100%}
 
-  /* === Textarea com overlay de highlight === */
-  .ta-wrap{position:relative; width:100%; margin-top:10px;}
+  /* Textarea + overlay de validação */
+  .ta-wrap{position:relative;width:100%;margin-top:10px}
   .ta-wrap textarea{
-    position:relative;
-    z-index:2;
-    background:#fff; /* fundo branco */
-    color:#0b0d10;
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:10px;
-    width:100%;
-    min-height:160px;
-    font-family:ui-monospace,Consolas,monospace;
-    resize:vertical;
+    position:relative;z-index:2;background:#fff;color:#0b0d10;
+    border:1px solid var(--border);border-radius:10px;
+    padding:10px;width:100%;min-height:160px;
+    font-family:ui-monospace,Consolas,monospace;resize:vertical;
   }
   .ta-wrap .hl{
-    position:absolute; inset:0;
-    z-index:1;
-    padding:10px;
-    pointer-events:none;
-    white-space:pre-wrap;
-    word-wrap:break-word;
-    font-family:ui-monospace,Consolas,monospace;
-    color:transparent;
-    overflow:auto;
+    position:absolute;inset:0;z-index:1;padding:10px;
+    pointer-events:none;white-space:pre-wrap;word-wrap:break-word;
+    font-family:ui-monospace,Consolas,monospace;color:transparent;overflow:auto;
   }
-  .ta-wrap textarea, .ta-wrap .hl{line-height:1.5; font-size:14px}
+  .ta-wrap textarea, .ta-wrap .hl{line-height:1.5;font-size:14px}
+  .hl .errLine{ text-decoration: underline wavy var(--err) 1.5px; text-decoration-skip-ink:auto; }
 
-  .hl .errLine{
-    text-decoration: underline wavy var(--err) 1.5px;
-    text-decoration-skip-ink:auto;
-  }
-
-  .controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap}
+  /* Controles em uma linha */
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .radio-group{flex:1;display:flex;gap:18px;align-items:center;white-space:nowrap}
 
-  /* exemplos (grade 4 x n) */
-  .examples{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;margin-bottom:10px}
-  .examples code{display:block;padding:6px 8px;background:#fff;border:1px solid var(--border);border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.25}
+  /* Exemplos */
+  .examples { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; font-size:12px; }
 
-  /* tabela preview (zebra + hover) */
+  /* Tabela preview */
   table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff;overflow:hidden;border-radius:10px;border:1px solid var(--border)}
   thead th{background:#f0f3f7;padding:10px 8px;text-align:left;border-bottom:1px solid var(--border)}
   tbody td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top}
   tbody tr:nth-child(odd){background:var(--zebra1)}
   tbody tr:nth-child(even){background:var(--zebra2)}
-  tbody tr:hover{background:var(--hover); transition: background .12s ease}
-
+  tbody tr:hover{background:var(--hover)}
   .status-ok{color:var(--ok);font-weight:600}
   .status-err{color:var(--err);font-weight:600}
   .coordText{display:inline-block}
@@ -83,27 +62,27 @@
 
   <div class="card">
     <p>
-      Insira <b>uma coordenada por linha</b> (LAT/LON em qualquer formato). Linhas vazias são ignoradas. Seguem alguns exemplos abaixo:
+      Insira <b>uma coordenada por linha</b> (LAT/LON em qualquer formato aceito). Linhas vazias são ignoradas. Seguem alguns exemplos abaixo:
     </p>
 
     <div class="io-block">
-      <!-- EXEMPLOS (inclui o novo solicitado) -->
-      <div class="examples">
-        <code>S 22° 26,710’, W 040° 02,303’</code>
-        <code>-22.40862, -41.68232</code>
-        <code>22 40 44 S, 40 36 15 W</code>
-        <code>17 4.433 S, 37 52.9 W</code>
-        <code>22 24 31.03 S, 41 40 59.63 W</code>
-        <code>24º 41.261’ S; 42º 24.036’ W</code>
-        <code>N 47.6205, W 122.3493</code>
-        <code>24°54'22.3"S 38°15'35.9"W</code>
-        <code>47 37 N, 122 20 W</code>
-        <code>47.6205 N  122.3493 W</code>
-        <code>S 12° 30.500′, W 038° 45.250′</code>
-        <code>12°30′45″S  038°45′15″W</code>
-      </div>
+      <!-- EXEMPLOS -->
+     <div class="examples">
+    	<div>22° 26,710’ S, 040° 02,303’ W</div>
+    	<div>S 22° 26,710’, W 040° 02,303’</div>
+    	<div>-22.40862, -41.68232</div>
+    	<div>22 40 44 S, 40 36 15 W</div>
+    	<div>17 4.433 S, 37 52.9 W</div>
+    	<div>22 24 31.03 S, 41 40 59.63 W</div>
+    	<div>24º 41.261’ S, 42º 24.036’ W</div>
+    	<div>24°54'22.3"S 38°15'35.9"W</div>
+    	<div>40.446° N 79.982° W</div>
+    	<div>48°51′12″N 2°20′55″E</div>
+    	<div>41 24.2028, 2 10.4418</div>
+    	<div>33°51′31″S 151°12′51″E</div>
+     </div>
 
-      <!-- TEXTAREA (mesma largura da área dos exemplos por estar no mesmo container) -->
+      <!-- TEXTAREA + highlight -->
       <div class="ta-wrap">
         <div id="hl" class="hl" aria-hidden="true"></div>
         <textarea id="txt" placeholder="Cole aqui suas coordenadas…"></textarea>
@@ -112,13 +91,12 @@
 
     <div class="controls" style="margin-top:12px">
       <div class="radio-group" id="fmtGroup" title="Formato do CSV">
-        <label><input type="radio" name="fmt" value="DD" checked> DD (Graus decimais) (GISSUB)</label>
+        <label><input type="radio" name="fmt" value="DD" checked> DD (Graus decimais)</label>
         <label><input type="radio" name="fmt" value="DMM"> DMM (Graus + Minutos decimais)</label>
         <label><input type="radio" name="fmt" value="DMS"> DMS (Graus, Minutos e Segundos)</label>
         <label><input type="radio" name="fmt" value="UTM"> UTM</label>
       </div>
       <button id="btnConvert">Converter</button>
-      <span id="status" class="muted"></span>
     </div>
   </div>
 
@@ -131,118 +109,119 @@
 </div>
 
 <script>
-/* ===== Regex e Parsing ===== */
+/* ===== Regex corrigido: aceita minutos mesmo sem segundos ===== */
 const COORD_RE = new RegExp(
   [
-    '(?:\\b(?<preHem>[NnSsEeWw])\\s*)?',
-    '(?<deg>[-+]?\\d{1,3}(?:[.,]\\d+)?)',
-    '(?:\\s*(?:[°ºo])?\\s*',
-      '(?<min>\\d{1,2}(?:[.,]\\d+)?)?',
-      '(?:\\s*[' + String.fromCharCode(39) + '’′]\\s*',
-        '(?<sec>\\d{1,2}(?:[.,]\\d+)?)',
-        '(?:\\s*["”″])?',
-      ')?',
-    ')?',
-    '\\s*(?<sufHem>[NnSsEeWw])?'
+    '(?:\\b(?<preHem>[NnSsEeWw])\\s*)?',       // hemisfério antes (opcional)
+    '(?<deg>[-+]?\\d{1,3}(?:[.,]\\d+)?)',      // graus (int/decimal)
+    '(?:\\s*(?:[°ºo]))?',                      // símbolo de grau opcional
+    '(?:\\s*(?<min>\\d{1,2}(?:[.,]\\d+)?)\\s*(?:[\'’′])?)?', // minutos (opcional) com ou sem símbolo
+    '(?:\\s*(?<sec>\\d{1,2}(?:[.,]\\d+)?)\\s*(?:["”″])?)?',  // segundos (opcional) com ou sem símbolo
+    '\\s*(?<sufHem>[NnSsEeWw])?'               // hemisfério depois (opcional)
   ].join(''),
   'g'
 );
 
+/* ===== Utils ===== */
 function sanitizeLine(line){
   return line.replace(/[^\dNSEWnsew.,;:\-+°ºo'’′"”″\s]/g, ' ').trim();
 }
 function num(str){ return str ? parseFloat(str.replace(',', '.')) : NaN; }
+function toFixed6Dot(x){ return Number(x).toFixed(6).replace(',', '.'); }
+function hemLetter(v,lat=true){ return lat ? (v<0?'S':'N') : (v<0?'W':'E'); }
 
-const ERRORS = {
-  UNRECOG: 'não reconhecido',
-  INCOMPLETE: 'par incompleto',
-  RANGE: 'fora do intervalo',
-  NAN: 'número inválido'
-};
+/* ===== Parsing com papel (lat/lon) via hemisfério ===== */
+function parseOne(m){
+  const hem = (m.groups.preHem || m.groups.sufHem || '').toUpperCase();
+  const role = (hem==='N'||hem==='S') ? 'lat' : (hem==='E'||hem==='W') ? 'lon' : null;
 
-function dmsToDecimal(m){
   let d = num(m.groups.deg);
   const hasMin = m.groups.min !== undefined && m.groups.min !== '';
   const hasSec = m.groups.sec !== undefined && m.groups.sec !== '';
   let minutes = hasMin ? num(m.groups.min) : 0;
   let seconds = hasSec ? num(m.groups.sec) : 0;
-  if(hasMin || hasSec){
-    d = Math.sign(d) * Math.abs(Math.trunc(d));
-  }
-  let dec = Math.abs(d) + (minutes/60) + (seconds/3600);
+
+  if (hasMin || hasSec) d = Math.sign(d) * Math.abs(Math.trunc(d));
+
+  let dec = Math.abs(d) + minutes/60 + seconds/3600;
   dec = (d < 0) ? -dec : dec;
-  const hem = (m.groups.preHem || m.groups.sufHem || '').toUpperCase();
-  if(hem==='S' || hem==='W') dec = -Math.abs(dec);
-  return dec;
+
+  if (hem==='S' || hem==='W') dec = -Math.abs(dec);
+  if (hem==='N' || hem==='E') dec =  Math.abs(dec);
+
+  return { dec, role };
 }
 
-/* devolve {ok:true, lat, lon} ou {ok:false, error:<msg>} */
 function parseLineDetailed(line){
   const raw = sanitizeLine(line);
-  if(!raw) return { ok:false, error: ERRORS.UNRECOG };
+  if(!raw) return { ok:false, error:'não reconhecido' };
 
   const matches = [...raw.matchAll(COORD_RE)];
-  if(matches.length === 0) return { ok:false, error: ERRORS.UNRECOG };
+  if(matches.length===0) return { ok:false, error:'não reconhecido' };
 
-  const coords = [];
-  for(const m of matches){
-    const hasSomeSignal =
+  const parts = [];
+  for (const m of matches){
+    const hasSignal =
       (m.groups.preHem || m.groups.sufHem) ||
       /[°ºo'’′"”″]/.test(m[0]) ||
       /[-+]/.test(m.groups.deg) ||
       /\d+[,\.]\d+/.test(m.groups.deg);
-    if(!hasSomeSignal) continue;
-    const dec = dmsToDecimal(m);
-    if (!Number.isFinite(dec)) return { ok:false, error: ERRORS.NAN };
-    coords.push(dec);
-    if (coords.length === 2) break;
+    if(!hasSignal) continue;
+
+    const { dec, role } = parseOne(m);
+    if(!Number.isFinite(dec)) return { ok:false, error:'número inválido' };
+    parts.push({ dec, role });
+    if(parts.length===2) break;
   }
 
-  if(coords.length < 2) return { ok:false, error: ERRORS.INCOMPLETE };
+  if(parts.length<2) return { ok:false, error:'par incompleto' };
 
-  let [a,b] = coords;
-  const inLat = Math.abs(a) <= 90, inLon = Math.abs(b) <= 180;
-  const inLat2 = Math.abs(b) <= 90, inLon2 = Math.abs(a) <= 180;
-  if(!(inLat && inLon) && (inLat2 && inLon2)) [a,b] = [b,a];
+  // decide usando hemisfério; se faltar, usa intervalo/ordem
+  let lat=null, lon=null;
+  const [p0,p1] = parts;
 
-  if(!Number.isFinite(a) || !Number.isFinite(b)) return { ok:false, error: ERRORS.NAN };
-  if(Math.abs(a) > 90 || Math.abs(b) > 180) return { ok:false, error: ERRORS.RANGE };
+  if (p0.role==='lat') lat=p0.dec;
+  if (p0.role==='lon') lon=p0.dec;
+  if (p1.role==='lat') lat=p1.dec;
+  if (p1.role==='lon') lon=p1.dec;
 
-  return { ok:true, lat:a, lon:b };
+  if (lat===null && lon===null){
+    if (Math.abs(p0.dec)>90 && Math.abs(p1.dec)<=90){ lon=p0.dec; lat=p1.dec; }
+    else if (Math.abs(p1.dec)>90 && Math.abs(p0.dec)<=90){ lon=p1.dec; lat=p0.dec; }
+    else { lat=p0.dec; lon=p1.dec; } // ambos <=90 → mantém ordem
+  } else if (lat===null){
+    lat = (p0.role ? p1.dec : p0.dec);
+  } else if (lon===null){
+    lon = (p0.role ? p1.dec : p0.dec);
+  }
+
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)) return { ok:false, error:'número inválido' };
+  if(Math.abs(lat)>90||Math.abs(lon)>180)         return { ok:false, error:'fora do intervalo' };
+
+  return { ok:true, lat, lon, src:raw };
 }
 
-/* ===== Formatação ===== */
-function toFixed6(x){ return (Math.round(x*1e6)/1e6).toFixed(6); }
-function ddStrings(lat, lon, useComma=false){
-  const sLat = (useComma ? toFixed6(lat).replace('.', ',') : toFixed6(lat));
-  const sLon = (useComma ? toFixed6(lon).replace('.', ',') : toFixed6(lon));
-  return [sLat, sLon];
+/* ===== Saídas com ponto decimal ===== */
+function ddStrings(lat, lon){
+  return [ toFixed6Dot(lat), toFixed6Dot(lon) ];
 }
-function hemLetter(v, lat=true){ return lat ? (v<0?'S':'N') : (v<0?'W':'E'); }
-
-/* DMM com cardinal sufixo e SEM zero à esquerda em graus */
 function dmmStrings(lat, lon){
-  function one(v, latAxis){
+  function one(v,latAxis){
     const hem=hemLetter(v,latAxis), av=Math.abs(v);
-    const d=Math.floor(av);                       // sem zero à esquerda
-    const m=(av-d)*60;
-    const mStr=(Math.round(m*1000)/1000).toFixed(3).replace('.',',');
-    return `${d}° ${mStr}′ ${hem}`;
+    const d=Math.floor(av);
+    const m=((av-d)*60).toFixed(3).replace(',', '.');
+    return `${d}° ${m}′ ${hem}`;
   }
   return [one(lat,true), one(lon,false)];
 }
-
-/* DMS com cardinal sufixo e SEM zero à esquerda em graus (min com 2 dígitos) */
 function dmsStrings(lat, lon){
-  function one(v, latAxis){
+  function one(v,latAxis){
     const hem=hemLetter(v,latAxis), av=Math.abs(v);
-    const d=Math.floor(av);                       // sem zero à esquerda
-    const mFloat=(av-d)*60;
-    const m=Math.floor(mFloat);
-    const s=(mFloat-m)*60;
-    const sStr=(Math.round(s*100)/100).toFixed(2).replace('.',',');
-    const mPad = String(m).padStart(2,'0');
-    return `${d}° ${mPad}′ ${sStr}″ ${hem}`;
+    const d=Math.floor(av);
+    const mF=(av-d)*60, m=Math.floor(mF);
+    const s=((mF-m)*60).toFixed(2).replace(',', '.');
+    const mPad=String(m).padStart(2,'0');
+    return `${d}° ${mPad}′ ${s}″ ${hem}`;
   }
   return [one(lat,true), one(lon,false)];
 }
@@ -251,77 +230,56 @@ function dmsStrings(lat, lon){
 function latLonToUTM(lat, lon){
   const a=6378137.0, f=1/298.257223563, k0=0.9996;
   const e2=f*(2-f), ep2=e2/(1-e2);
-  const rad=Math.PI/180;
-  const φ=lat*rad;
-  let λ=lon*rad;
-  let zone = Math.floor((lon + 180)/6) + 1;
-  const λ0 = ((zone-1)*6 - 180 + 3) * rad;
-  const N = a / Math.sqrt(1 - e2*Math.sin(φ)**2);
-  const T = Math.tan(φ)**2;
-  const C = ep2 * Math.cos(φ)**2;
-  const A = Math.cos(φ)*(λ-λ0);
-  const e4 = e2*e2, e6=e4*e2;
-  const M = a*((1 - e2/4 - 3*e4/64 - 5*e6/256)*φ
-        - (3*e2/8 + 3*e4/32 + 45*e6/1024)*Math.sin(2*φ)
-        + (15*e4/256 + 45*e6/1024)*Math.sin(4*φ)
-        - (35*e6/3072)*Math.sin(6*φ));
-  const x = k0*N*(A + (1-T+C)*A**3/6 + (5 - 18*T + T**2 + 72*C - 58*ep2)*A**5/120) + 500000.0;
-  let y = k0*(M + N*Math.tan(φ)*(A**2/2 + (5 - T + 9*C + 4*C**2)*A**4/24 + (61 - 58*T + T**2 + 600*C - 330*ep2)*A**6/720));
-  if (lat < 0) y += 10000000.0;
-  function zoneLetterFromLat(lat){
-    if(lat>=84) return 'X'; if(lat< -80) return 'C';
-    const letters='CDEFGHJKLMNPQRSTUVWX'; const idx=Math.floor((lat+80)/8);
-    return letters[Math.max(0, Math.min(letters.length-1, idx))];
-  }
-  const letter = zoneLetterFromLat(lat);
-  return { zone, letter, easting: Math.round(x), northing: Math.round(y) };
+  const rad=Math.PI/180, φ=lat*rad, λ=lon*rad;
+  let zone=Math.floor((lon+180)/6)+1;
+  const λ0=((zone-1)*6-180+3)*rad;
+  const N=a/Math.sqrt(1-e2*Math.sin(φ)**2), T=Math.tan(φ)**2, C=ep2*Math.cos(φ)**2, A=Math.cos(φ)*(λ-λ0);
+  const e4=e2*e2, e6=e4*e2;
+  const M=a*((1-e2/4-3*e4/64-5*e6/256)*φ -(3*e2/8+3*e4/32+45*e6/1024)*Math.sin(2*φ)
+    +(15*e4/256+45*e6/1024)*Math.sin(4*φ) -(35*e6/3072)*Math.sin(6*φ));
+  const x=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T**2+72*C-58*ep2)*A**5/120)+500000;
+  let y=k0*(M+N*Math.tan(φ)*(A**2/2+(5-T+9*C+4*C**2)*A**4/24+(61-58*T+T**2+600*C-330*ep2)*A**6/720));
+  if(lat<0) y+=10000000;
+  const letters='CDEFGHJKLMNPQRSTUVWX', idx=Math.floor((lat+80)/8);
+  const letter=letters[Math.max(0,Math.min(letters.length-1,idx))];
+  return {zone,letter,easting:Math.round(x),northing:Math.round(y)};
 }
 
-/* ===== UI ===== */
-const $txt = document.getElementById('txt');
-const $hl  = document.getElementById('hl');
-const $previewWrap = document.getElementById('previewWrap');
-const $btnConvert = document.getElementById('btnConvert');
-const $btnDown = document.getElementById('btnDown');
-const $fmtGroup = document.getElementById('fmtGroup');
+/* ===== UI bindings ===== */
+const $txt=document.getElementById('txt'), $hl=document.getElementById('hl'),
+      $previewWrap=document.getElementById('previewWrap'),
+      $btnConvert=document.getElementById('btnConvert'),
+      $btnDown=document.getElementById('btnDown'),
+      $fmtGroup=document.getElementById('fmtGroup');
 
-let lastRows = [];
+let lastRows=[];
 
 function getSelectedFmt(){
   const r=[...$fmtGroup.querySelectorAll('input[name="fmt"]')].find(x=>x.checked);
   return r ? r.value : 'DD';
 }
-
-/* ===== Validator/Highlighter do textarea ===== */
 function escapeHTML(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function updateHighlight(){
-  const lines = $txt.value.split(/\r?\n/);
-  let html = '';
-  for(let i=0;i<lines.length;i++){
-    const raw = lines[i];
-    if(raw.trim()===''){ html += '\n'; continue; }
-    const parsed = parseLineDetailed(raw);
-    if(parsed.ok){
-      html += escapeHTML(raw) + '\n';
-    }else{
-      html += `<span class="errLine" title="${parsed.error}">${escapeHTML(raw)}</span>\n`;
-    }
-  }
-  $hl.innerHTML = html || '';
-  // sincroniza scroll
-  $hl.scrollTop = $txt.scrollTop;
-  $hl.scrollLeft = $txt.scrollLeft;
-}
-// sincroniza rolagem e input
-$txt.addEventListener('scroll', ()=>{ $hl.scrollTop = $txt.scrollTop; $hl.scrollLeft = $txt.scrollLeft; });
-$txt.addEventListener('input', updateHighlight);
 
-/* ===== Preview ===== */
+/* highlight do textarea */
+function updateHighlight(){
+  const lines=$txt.value.split(/\r?\n/); let html='';
+  for(const l of lines){
+    if(!l.trim()){ html+='\n'; continue; }
+    const p=parseLineDetailed(l);
+    if(p.ok) html+=escapeHTML(l)+'\n';
+    else html+=`<span class="errLine" title="${p.error}">${escapeHTML(l)}</span>\n`;
+  }
+  $hl.innerHTML=html; $hl.scrollTop=$txt.scrollTop; $hl.scrollLeft=$txt.scrollLeft;
+}
+$txt.addEventListener('input',updateHighlight);
+$txt.addEventListener('scroll',()=>{$hl.scrollTop=$txt.scrollTop;$hl.scrollLeft=$txt.scrollLeft;});
+
+/* preview */
 function renderPreview(rows){
-  const fmt = getSelectedFmt();
+  const fmt=getSelectedFmt();
 
   if(rows.length===0){
-    $previewWrap.innerHTML = '<p class="muted">Nenhuma linha para pré-visualizar.</p>';
+    $previewWrap.innerHTML='<p class="muted">Nenhuma linha para pré-visualizar.</p>';
     $btnDown.disabled = true;
     return;
   }
@@ -329,130 +287,72 @@ function renderPreview(rows){
   const validCount = rows.filter(r=>r.ok).length;
   $btnDown.disabled = validCount === 0;
 
-  let html = '<table><thead><tr><th>ID</th><th>Coordenadas inseridas</th><th>Coordenadas convertidas</th><th>Status</th><th>Copiar</th></tr></thead><tbody>';
-
+  let html='<table><thead><tr><th>ID</th><th>Coordenadas inseridas</th><th>Coordenadas convertidas</th><th>Status</th><th>Copiar</th></tr></thead><tbody>';
   for(const r of rows){
-    let converted = '';
+    let converted='';
     if(r.ok){
-      if(fmt==='UTM'){
-        const u=latLonToUTM(r.lat,r.lon);
-        converted = `${u.zone}${u.letter} ${u.easting} ${u.northing}`;
-      }else if(fmt==='DMM'){
-        const [a,b]=dmmStrings(r.lat,r.lon);
-        converted = `${a} , ${b}`;
-      }else if(fmt==='DMS'){
-        const [a,b]=dmsStrings(r.lat,r.lon);
-        converted = `${a} , ${b}`;
-      }else{
-        const [sLat, sLon]=ddStrings(r.lat,r.lon,true);
-        converted = `${sLat} , ${sLon}`;
-      }
+      if(fmt==='UTM'){ const u=latLonToUTM(r.lat,r.lon); converted=`${u.zone}${u.letter} ${u.easting} ${u.northing}`; }
+      else if(fmt==='DMM'){ const [a,b]=dmmStrings(r.lat,r.lon); converted=`${a} , ${b}`; }
+      else if(fmt==='DMS'){ const [a,b]=dmsStrings(r.lat,r.lon); converted=`${a} , ${b}`; }
+      else { const [a,b]=ddStrings(r.lat,r.lon); converted=`${a} , ${b}`; }
     }
-
-    const ddCopy = r.ok ? ddStrings(r.lat,r.lon,false).join(', ') : '';
-
-    html += `<tr>
+    html+=`<tr>
       <td>${r.id}</td>
       <td><span class="coordText">${escapeHTML(r.srcLine||'')}</span></td>
       <td><span class="coordText">${escapeHTML(converted)}</span></td>
-      <td>${r.ok ? `<span class="status-ok">OK</span>` : `<span class="status-err">${r.error||'erro'}</span>`}</td>
-      <td>${r.ok ? `<button class="copy-btn" data-copy="${converted}">Copiar</button>` : `<button class="copy-btn" disabled>Copiar</button>`}</td>
-
+      <td>${r.ok?'<span class="status-ok">OK</span>':'<span class="status-err">'+(r.error||'erro')+'</span>'}</td>
+      <td>${r.ok?'<button class="copy-btn" data-copy="'+converted+'">Copiar</button>':'<button class="copy-btn" disabled>Copiar</button>'}</td>
     </tr>`;
   }
+  html+='</tbody></table>';
+  $previewWrap.innerHTML=html;
 
-  html += '</tbody></table>';
-  $previewWrap.innerHTML = html;
-
-  // ações dos botões Copiar
-  $previewWrap.querySelectorAll('.copy-btn:not([disabled])').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const txt = btn.getAttribute('data-copy');
-      try{
-        await navigator.clipboard.writeText(txt);
-        btn.textContent = 'Copiado!';
-        setTimeout(()=> btn.textContent='Copiar', 1200);
-      }catch{
-        const ta=document.createElement('textarea');
-        ta.value=txt; document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); ta.remove();
-        btn.textContent = 'Copiado!';
-        setTimeout(()=> btn.textContent='Copiar', 1200);
-      }
-    });
+  $previewWrap.querySelectorAll('.copy-btn[data-copy]').forEach(btn=>{
+    btn.onclick=async()=>{const txt=btn.dataset.copy;try{await navigator.clipboard.writeText(txt);}catch(e){
+      const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    } btn.textContent='Copiado!'; setTimeout(()=>btn.textContent='Copiar',1200);};
   });
 }
 
-function buildCSV(rows, fmt){
-  const valids = rows.filter(r=>r.ok);
-  let csv = '';
+/* CSV */
+function buildCSV(rows,fmt){
+  const valids=rows.filter(r=>r.ok);
   if(fmt==='UTM'){
-    csv += 'ID;UTM_ZONE;EASTING;NORTHING\n';
+    let csv='ID;UTM_ZONE;EASTING;NORTHING\n';
+    for(const r of valids){const u=latLonToUTM(r.lat,r.lon);csv+=`${r.id};${u.zone}${u.letter};${u.easting};${u.northing}\n`;}
+    return csv;
+  } else {
+    let csv='ID;LAT;LON\n';
     for(const r of valids){
-      const u=latLonToUTM(r.lat,r.lon);
-      csv += `${r.id};${u.zone}${u.letter};${u.easting};${u.northing}\n`;
+      if(fmt==='DMM'){const [a,b]=dmmStrings(r.lat,r.lon);csv+=`${r.id};${a};${b}\n`;}
+      else if(fmt==='DMS'){const [a,b]=dmsStrings(r.lat,r.lon);csv+=`${r.id};${a};${b}\n`;}
+      else{const [a,b]=ddStrings(r.lat,r.lon);csv+=`${r.id};${a};${b}\n`;}
     }
-  }else if(fmt==='DD'){
-    csv += 'ID;LAT;LON\n';
-    for(const r of valids){
-      const [sLat,sLon]=ddStrings(r.lat,r.lon,true);
-      csv += `${r.id};${sLat};${sLon}\n`;
-    }
-  }else if(fmt==='DMM'){
-    csv += 'ID;LAT;LON\n';
-    for(const r of valids){
-      const [a,b]=dmmStrings(r.lat,r.lon);
-      csv += `${r.id};${a};${b}\n`;
-    }
-  }else{
-    csv += 'ID;LAT;LON\n';
-    for(const r of valids){
-      const [a,b]=dmsStrings(r.lat,r.lon);
-      csv += `${r.id};${a};${b}\n`;
-    }
+    return csv;
   }
-  return csv;
 }
 
-/* ========= Ações ========= */
+/* converter */
 function convertNow(){
-  const lines = $txt.value.split(/\r?\n/);
-  const out = [];
-  let id = 1;
-  for (let i=0;i<lines.length;i++){
-    const s = lines[i].trim();
-    if(!s) continue; // ignora vazias
-    const parsed = parseLineDetailed(s);
-    if(parsed.ok){
-      out.push({id, lat:parsed.lat, lon:parsed.lon, ok:true, srcLine:s});
-    }else{
-      out.push({id, ok:false, error:parsed.error, srcLine:s});
-    }
+  const lines=$txt.value.split(/\r?\n/); const out=[]; let id=1;
+  for(const l of lines){
+    if(!l.trim()) continue;
+    const p=parseLineDetailed(l);
+    if(p.ok) out.push({id,lat:p.lat,lon:p.lon,ok:true,srcLine:l});
+    else out.push({id,ok:false,error:p.error,srcLine:l});
     id++;
   }
-  lastRows = out;
-  renderPreview(out);
-  updateHighlight(); // atualiza sublinhados após converter também
+  lastRows=out; renderPreview(out); updateHighlight();
 }
+$btnConvert.onclick=convertNow;
+$fmtGroup.onchange=()=>{ if(lastRows.length>0) renderPreview(lastRows); };
 
-document.getElementById('btnConvert').addEventListener('click', convertNow);
-
-$fmtGroup.addEventListener('change', ()=>{
-  if(lastRows.length>0) renderPreview(lastRows);
-});
-
-$btnDown.onclick = () => {
-  if(lastRows.length===0) return;
-  const fmt = getSelectedFmt();
-  const csv = buildCSV(lastRows, fmt);
-  if(!csv) return;
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'coordenadas.csv';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+/* download */
+$btnDown.onclick=()=>{ if(lastRows.length===0) return;
+  const fmt=getSelectedFmt(); const csv=buildCSV(lastRows,fmt);
+  if(!csv) return; const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='coordenadas.csv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),0);
 };
 
 /* inicial */
@@ -460,4 +360,3 @@ updateHighlight();
 </script>
 </body>
 </html>
-
